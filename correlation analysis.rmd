@@ -1,0 +1,99 @@
+```{r}
+library(pheatmap)
+##setwd("D:/博后/塑料片课题/网络分析/network R")
+```
+
+```{r}
+##列是变量名，行名是样品名
+dom<- read.csv("代谢-6个样本.csv", row.names=1)
+dom <- dom[colSums(dom)!=0]#删除列和为0的所有列
+otu<- read.csv("免疫-6个样本.csv", row.names=1)
+otu<-otu[colSums(otu)!=0]#删除列和为0的所有列
+head(dom)
+head(otu)
+```
+
+```{r}
+#dom[is.na(dom)] = 0
+#otu[is.na(otu)] = 0
+#数据框转置
+dom<-t(dom)
+otu<-t(otu)
+curr.S=data.frame()
+#head(dom)
+#head(otu)
+```
+
+```{r}
+dim(dom)
+dim(otu)
+```
+
+```{r}
+# 初始化结果矩阵
+results <- matrix(, nrow=ncol(dom), ncol=ncol(otu))
+
+# 遍历两个表中的所有基因组合
+for (i in 1:ncol(dom)){
+  for (j in 1:ncol(otu)){
+    # cor计算 dom 的基因 i 和 otu 的基因 j 之间的pearson
+    results[i, j] <- cor(dom[, i], otu[, j], method = "pearson")
+  }
+}
+
+# 相关系数矩阵赋值给数据框
+results_df <- as.data.frame(results)
+
+# 以基因名重命名列名和行名
+colnames(results_df) <- colnames(otu)
+rownames(results_df) <- colnames(dom)
+
+print(results_df)
+```
+
+
+```{r}
+#warnings()
+#colnames(curr.S)=rownames(otu)  
+#rownames(curr.S)=rownames(dom)
+library(tidyverse)
+
+# 将行名转化为列
+results_df <- results_df %>% rownames_to_column(var = "OTU")
+
+# 转化为长格式
+results_long <- results_df %>% gather(ARG, R, -OTU)
+
+print(results_long)
+```
+
+```{r}
+# 导出
+write.csv(results_df, file = "Pearson_correlation.csv")
+#长格式
+write.csv(results_long, file = "Pearson_correlation_long.csv")
+```
+
+```{r}
+#write.csv(curr.S,"curr0.1.S.csv")
+#curr.S[curr.S>0]
+#curr.S[curr.S>0]##这个是所有大于0的
+
+##qlchen将相关性表变化成edge格式。
+#library(reshape2)
+#x=read.csv("curr0.1.S.csv", header = T)
+#z<-cbind(rownames(curr.S),curr.S)#把行名生成第一列
+#colnames(z)[1] <- 'OTU'#把第一列的列名改成OTU
+#x<-melt(z,id="OTU",variable.name = "ARG",value.name = "R")#短数据合并成长数拒，id是不变的那一列
+
+#write.csv(x,quote=FALSE,file="edge_asv_all.csv")
+
+```
+
+
+
+
+
+
+
+
